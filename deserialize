@@ -1,0 +1,50 @@
+ #!/usr/bin/env php
+<?php
+/**
+ * Shell script to display files that contain serialized PHP data
+ *
+ * @author Gabriel Birke
+ */
+
+if(empty($argv[1])) {
+        errmsg("Please specify a file to deserialize.\n", 1);
+}
+
+$f = $argv[1];
+if(!file_exists($f)) {
+        errmsg("File not found.\n", 2);
+}
+if(!is_readable($f)) {
+        errmsg("File is not readable.\n", 3);
+}
+if(!is_file($f)) {
+        errmsg("Not a file.\n", 4);
+}
+
+$content = file_get_contents($f);
+
+// Prepare error handler to catch faulty files
+
+
+if($content) {
+        set_error_handler("handle_unseralize_error", E_NOTICE);
+        $unserialized = unserialize($content);
+        restore_error_handler();
+        var_export($unserialized);
+}
+
+
+/**
+ * Print error message to stderr
+ */ 
+function errmsg($msg, $die_with_error=0) {
+        file_put_contents("php://stderr", $msg);
+        if($die_with_error) {
+                die($die_with_error);
+        }
+}
+
+function handle_unseralize_error($errno, $errmsg) {
+        errmsg("Unable to deserialize file - invalid format. Are you sure this is a PHP serialized file?", 9);
+}
+
